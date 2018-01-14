@@ -31,21 +31,7 @@ val is_empty : queue -> bool
 @ensures : retourne la file avec (n,e,i,j) en plus
 @raises : rien
 *)
-val add : int -> Graph.edge -> int -> int -> queue -> queue
-
-(**
-@requires : une file
-@ensures : retourne le premier élément
-@raises : Empty si la file est vide
-*)
-val peek : queue -> int * Graph.edge * int * int
-
-(**
-@requires : une file
-@ensures : retourne la file sans le premier élément
-@raises : Empty si la file est vide
-*)
-val pop : queue -> queue
+val add : int -> Graph.edge -> Graph.graph -> int -> int -> queue -> queue
 
 (**
 @requires :
@@ -56,7 +42,7 @@ val pop : queue -> queue
 @ensures : retourne la file où on ajoute les arêtes d'un chemin donné
 @raises : Empty si la liste est vide
 *)
-val fill : int -> string list -> queue -> Graph.graph -> queue
+val fill : int -> string list -> int -> Graph.graph -> queue -> queue
 
 (**
 @requires :
@@ -66,7 +52,7 @@ val fill : int -> string list -> queue -> Graph.graph -> queue
 @ensures : retourne la file où on ajoute les arêtes d'une liste de chemin
 @raises : rien
 *)
-val fill_all : string list list -> queue -> Graph.graph -> queue * int
+val fill_all : string list list -> Graph.graph -> queue -> queue * int
 
 (**
 @requires :
@@ -74,7 +60,7 @@ val fill_all : string list list -> queue -> Graph.graph -> queue * int
 @ensures : retourne la file transformée en liste
 @raises : rien
 *)
-val queue_to_list : queue -> (int * Graph.edge * int * int) list
+val queue_to_list : queue -> (int * (int * string * string * int * int) list) list
 
 (**
 @requires :
@@ -86,7 +72,7 @@ val queue_to_list : queue -> (int * Graph.edge * int * int) list
   augmenté de weight
 @raises : rien
 *)
-val update_weight : int -> int -> queue -> queue
+val update_weight : int -> int -> int -> Graph.graph -> queue -> queue
 
 (**
 @requires :
@@ -96,6 +82,6 @@ val update_weight : int -> int -> queue -> queue
   passager par tunnel (arête)
 @raises : rien
 *)
-val update : queue -> queue
+val update : Graph.graph -> queue -> queue
 
-val split_queue : queue -> int -> (int * Graph.edge * int * int) list list
+val split_queue : queue -> int -> (int * string * string * int * int) list list

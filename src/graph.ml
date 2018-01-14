@@ -62,11 +62,11 @@ let fold f g acc = MapGraph.fold f g acc
 
 let distance_path li g =
   let rec aux l pred g acc =
-    match li with
+    match l with
       |[] -> acc
       |p::q ->
         let w = find_edge (edge p pred) g in
-        if w = -1 then failwith "Arête non trouvé"
+        if w = -1 then failwith "Arete non trouvé"
         else aux q p g acc+w
   in
   match li with
