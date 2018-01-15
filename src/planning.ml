@@ -95,7 +95,7 @@ let check g q =
                             check_aux k3 s acc3
                           else if ((e11 = e1 && e12 = e2) || (e11 = e2 && e12 = e1))
                           then
-                            (e1,e2,[n;n1])::acc3
+                            (e1,e2,[n1;n])::acc3
                           else
                             check_aux k3 s acc3
                     in
@@ -110,6 +110,27 @@ let check g q =
         if (acc = []) then aux v []
         else acc
     ) q []
+
+let find_elt n e1 e2 q =
+  MapQueue.fold (
+      fun k v acc ->
+        let rec aux l acc1 =
+          match l with
+            |[] -> acc1
+            |(n1,e11,e12,p,tot)::s ->
+              if (n1 = n && ((e1 = e11 && e2 = e12) || (e1 = e12 && e2 = e11)))
+              then
+                (n1,e11,e12,p,tot)
+              else
+                aux s acc1
+        in
+        let (n2,_,_,_,_) = acc in
+        if (n2 = -1)
+        then
+          aux v (-1,"","",0,0)
+        else
+          acc
+    ) q (-1,"","",0,0)
 
 let update_weight n deb weight g q =
   MapQueue.fold
@@ -131,44 +152,41 @@ let update_weight n deb weight g q =
           aux v acc
     ) q empty
 
+let total_time q =
+  MapQueue.fold (
+    fun k v acc ->
+      let rec aux l acc1 =
+        match l with
+          |[] -> acc1
+          |(_,_,_,_,t)::s -> aux s (max acc1 t)
+      in
+      aux v 0
+    ) q 0
+
 let update g q =
-  let check elt q =
-    let (n,e1,e2,p,total) = elt in
-    let k1 = p-(Graph.find_edge (Graph.edge e1 e2) g) in
-    MapQueue.fold
-      (
-        fun k v acc ->
-          let rec aux l acc1 =
-            match l with
-              |[] -> acc1
-              |((n1,e11,e12,p1,total1)::s) ->
-                if (k1 >= p1) then aux s acc1
-                else if ((e1=e11 && e2=e12) || (e1=e12 && e2=e11))
-                then
-                  p1-k1
-                else aux s acc1
-          in
-          if (p <= k) then acc
-          else max (aux v 0) acc
-      ) q 0
+  let rec aux l acc =
+    match l with
+      |[] -> acc
+      |(e1,e2,li)::s ->
+        match li with
+        |[] -> assert false
+        |p::[] -> assert false
+        |(a::(b::s)) ->
+          let (n1,_,_,p1,total1) = find_elt a e1 e2 acc in
+          let (n2,_,_,p2,total2) = find_elt b e1 e2 acc in
+          let k1 = p1-(Graph.find_edge (Graph.edge e1 e2) g) in
+          let k2 = p2-(Graph.find_edge (Graph.edge e1 e2) g) in
+          let tmp1 = update_weight n2 (k1-1) (p1-k2) g acc in
+          let tmp2 = update_weight n1 (k2-1) (p2+p1-2*k1) g acc in
+          if ((total_time tmp1) > (total_time tmp2))
+          then
+            let _ = print_queue tmp2 in
+            aux (check g tmp2) tmp2
+          else
+            let _ = print_queue tmp1 in
+            aux (check g tmp1) tmp1
   in
-  MapQueue.fold
-    (
-      fun k v acc ->
-        let rec aux l acc1 q1 =
-          match l with
-            |[] -> acc1
-            |((n,e1,e2,p,total)::s) ->
-              let weight = check (n,e1,e2,p,total) acc1 in
-              if (weight = 0)
-              then
-                aux s (add n (Graph.edge e1 e2) g k total acc1) q1
-              else
-                let q2 = update_weight n k weight g q1 in
-                aux s (add n (Graph.edge e1 e2) g (k+weight) (total+weight) acc1) q2
-        in
-        aux v acc q
-    ) q MapQueue.empty
+  aux (check g q) q
 
 let split_queue q nb =
   let rec aux1 i =

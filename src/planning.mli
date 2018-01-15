@@ -65,7 +65,7 @@ val queue_to_list : queue -> (int * (int * string * string * int * int) list) li
 
 val print_queue : queue -> unit
 val check : Graph.graph -> queue -> (string * string * int list) list
-
+val find_elt : int -> string -> string -> queue -> (int * string * string * int * int)
 
 
 (**
@@ -79,6 +79,7 @@ val check : Graph.graph -> queue -> (string * string * int list) list
 @raises : rien
 *)
 val update_weight : int -> int -> int -> Graph.graph -> queue -> queue
+val total_time : queue -> int
 
 (**
 @requires :
