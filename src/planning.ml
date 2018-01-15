@@ -49,8 +49,67 @@ let fill_all li g q =
   in
   aux li 0 g q
 
-let rec queue_to_list q =
+let queue_to_list q =
   MapQueue.bindings q
+
+
+let print_queue q =
+  let l = queue_to_list q in
+  let rec aux1 l =
+    match l with
+      |[] -> ()
+      |((n,e1,e2,p,tot)::s) ->
+        let _ = print_string ("("^(string_of_int n)^","^e1^","^e2^",") in
+        let _ = print_int p in
+        let _ = print_string (","^(string_of_int tot)^") - ") in
+        aux1 s
+  in
+  let rec aux2 l =
+    match l with
+      |[] -> ()
+      |(k,li)::s ->
+        let _ = print_string ((string_of_int k)^" : ") in
+        let _ = aux1 li in
+        let _ = print_string "\n" in
+        aux2 s
+  in
+  aux2 l
+
+let check g q =
+  MapQueue.fold
+    (
+      fun k v acc ->
+        let rec aux l acc1 =
+          match l with
+            |[] -> acc1
+            |((n,e1,e2,p,total)::s) ->
+              let tmp = MapQueue.fold
+                (
+                  fun k2 v2 acc2 ->
+                    let rec check_aux k3 l3 acc3 =
+                      match l3 with
+                        |[] -> acc3
+                        |((n1,e11,e12,p1,total1)::s) ->
+                          if (p <= k2 || k >= p1 || n1 = n)
+                          then
+                            check_aux k3 s acc3
+                          else if ((e11 = e1 && e12 = e2) || (e11 = e2 && e12 = e1))
+                          then
+                            (e1,e2,[n;n1])::acc3
+                          else
+                            check_aux k3 s acc3
+                    in
+                    if (k2 > k) then acc2
+                    else if (acc2 = []) then check_aux k2 v2 []
+                    else acc2
+                ) q []
+              in
+              if (tmp = []) then aux s acc1
+              else tmp
+        in
+        if (acc = []) then aux v []
+        else acc
+    ) q []
 
 let update_weight n deb weight g q =
   MapQueue.fold
@@ -58,26 +117,18 @@ let update_weight n deb weight g q =
       fun k v acc ->
         if (k < deb) then MapQueue.add k v acc
         else
-          let rec aux l acc1 acc2 =
+          let rec aux l acc1 =
             match l with
-              |[] -> (acc1,acc2)
+              |[] -> acc1
               |((i,n1,n2,f,total)::s) ->
+                let p = Graph.find_edge (Graph.edge n1 n2) g in
                 if (i = n)
                 then
-                  aux s acc1 (i,n1,n2,f,total)
+                  aux s (add i (Graph.edge n1 n2) g (f-p+weight) (total+weight) acc1)
                 else
-                  aux s ((i,n1,n2,f,total)::acc1) acc2
+                  aux s (add i (Graph.edge n1 n2) g (f-p) total acc1)
           in
-          let (a1,a2) = aux v [] (-1,"","",0,0) in
-          let (indice,e1,e2,p,total) = a2 in
-          if (indice = -1) then MapQueue.add k a1 acc
-          else
-            if (a1 = [])
-            then
-              add n (Graph.edge e1 e2) g (k+weight) (total+weight) acc
-            else
-              let tmp2 = MapQueue.add k a1 acc in
-              add n (Graph.edge e1 e2) g (k+weight) (total+weight) tmp2
+          aux v acc
     ) q empty
 
 let update g q =

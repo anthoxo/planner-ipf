@@ -62,6 +62,12 @@ val fill_all : string list list -> Graph.graph -> queue -> queue * int
 *)
 val queue_to_list : queue -> (int * (int * string * string * int * int) list) list
 
+
+val print_queue : queue -> unit
+val check : Graph.graph -> queue -> (string * string * int list) list
+
+
+
 (**
 @requires :
   un entier n
